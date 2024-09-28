@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Service Backend Symfony
+  symfony:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: symfony-backend
+    restart: unless-stopped
+    working_dir: /var/www/symfony
+    volumes:
+      - ./backend:/var/www/symfony
+    ports:
+      - "9000:9000"
+    environment:
+      - SYMFONY_ENV=dev
+      - DATABASE_URL=mysql://symfony:symfony@mysql:3306/symfony_db
+    depends_on:
+      - mysql
+
+  # Service Frontend React
+  react:
+    build:
+      context: ./frontend
+    container_name: react-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/var/www/react
+
+  # Service Base de données MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: symfony_db
+      MYSQL_USER: symfony
+      MYSQL_PASSWORD: symfony
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  # Service PHPMyAdmin pour gérer MySQL
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "8080:80"
+
+volumes:
+  mysql_data:
